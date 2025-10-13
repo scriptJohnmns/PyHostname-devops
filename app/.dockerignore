@@ -1,0 +1,32 @@
+# Arquivo .dockerignore
+
+# Pasta do ambiente virtual do Python
+venv/
+.venv/
+
+# Pastas e arquivos do Terraform
+terraform/
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate*
+
+# Pasta do Ansible
+ansible/
+
+# Pasta do Git
+.git/
+
+# Arquivos SSH
+.ssh/
+
+# Pastas de cache do Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Pastas de IDEs
+.vscode/
+.idea/
+
+# Arquivos de ambiente (NUNCA devem ir na imagem)
+.env
