@@ -3,10 +3,13 @@
 - name: Deploy da Aplicação Pyhostname
   hosts: webservers
   become: true
+
+  collections:
+    - amazon.aws
   
   vars:
     aws_region: "us-east-1" # Mude para sua região
-    ecr_repo_uri: "URL_BASE_DO_SEU_REPO" # Mude para o seu URI base
+    ecr_repo_uri: "408918962370.dkr.ecr.us-east-1.amazonaws.com/pyhostname-ecr" # Cole a URL base aqui
     deploy_dir: "/home/ec2-user"
 
   tasks:
