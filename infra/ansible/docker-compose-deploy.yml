@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   webapp:
-    image: 408918962370.dkr.ecr.us-east-1.amazonaws.com/pyhostname-ecr:1.0
+    image: 408918962370.dkr.ecr.us-east-1.amazonaws.com/pyhostname-ecr:latest
     container_name: pyhostname_app
     ports:
       - "8080:8080"

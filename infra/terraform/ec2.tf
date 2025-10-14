@@ -1,7 +1,7 @@
 resource "aws_instance" "ec2_pyhost" {
   ami                    = "ami-052064a798f08f0d3"
   instance_type          = "t2.micro"
-  key_name               = aws_key_pair.pyhostnamekey.key_name
+  key_name               = aws_key_pair.pyhostname_key.key_name
   vpc_security_group_ids = [aws_security_group.pyhostname_sg.id]
 
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name

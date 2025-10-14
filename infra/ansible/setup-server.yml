@@ -1,0 +1,40 @@
+# infra/ansible/setup-server.yml
+---
+- name: Setup do Servidor (Instalação de Dependências)
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: 1. Garantir que os pacotes do sistema estão atualizados
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+
+    - name: 2. Instalar Docker
+      ansible.builtin.dnf:
+        name: docker
+        state: present
+
+    - name: 3a. Garantir que o diretório de plugins do Docker CLI existe
+      ansible.builtin.file:
+        path: /usr/local/lib/docker/cli-plugins
+        state: directory
+        mode: '0755'
+
+    - name: 3b. Instalar Docker Compose v2 (como plugin)
+      ansible.builtin.get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+        dest: /usr/local/lib/docker/cli-plugins/docker-compose
+        mode: '0755'
+
+    - name: 4. Garantir que o serviço do Docker está iniciado e habilitado
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: 5. Adicionar o usuário ec2-user ao grupo docker
+      ansible.builtin.user:
+        name: ec2-user
+        groups: docker
+        append: yes

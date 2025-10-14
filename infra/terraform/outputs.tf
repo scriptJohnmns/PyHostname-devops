@@ -6,5 +6,5 @@ output "public_ip" {
 output "ecr_repository_url" {
   description = "URL do repositório ECR"
   # Use o nome local do seu recurso: ecr_pyhost
-  value       = aws_ecr_repository.ecr_pyhost.repository_url
+  value = aws_ecr_repository.ecr_pyhost.repository_url
 }

@@ -1,0 +1,29 @@
+# infra/ansible/deploy-app.yml
+---
+- name: Deploy da Aplicação Pyhostname
+  hosts: webservers
+  become: true
+  
+  vars:
+    aws_region: "us-east-1" # Mude para sua região
+    ecr_repo_uri: "URL_BASE_DO_SEU_REPO" # Mude para o seu URI base
+    deploy_dir: "/home/ec2-user"
+
+  tasks:
+    - name: 1. Copiar arquivo de variáveis de ambiente (.env)
+      ansible.builtin.copy:
+        src: ../../.env
+        dest: "{{ deploy_dir }}/.env"
+
+    - name: 2. Copiar arquivo do Docker Compose para o servidor
+      ansible.builtin.copy:
+        src: ./docker-compose-deploy.yml
+        dest: "{{ deploy_dir }}/docker-compose.yml"
+
+    - name: 3. Fazer login no Amazon ECR
+      ansible.builtin.shell:
+        cmd: "aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ ecr_repo_uri }}"
+
+    - name: 4. Iniciar a aplicação com Docker Compose v2
+      community.docker.docker_compose_v2:
+        project_src: "{{ deploy_dir }}"
