@@ -3,9 +3,7 @@
 name: 'Terraform Infrastructure Pipeline'
 
 on:
-  # Adiciona um gatilho para podermos rodar esta pipeline manualmente
   workflow_dispatch:
-    # Cria um menu dropdown na interface do GitHub para escolher a ação
     inputs:
       action:
         description: 'Apply or Destroy'
@@ -21,17 +19,14 @@ jobs:
     name: 'Terraform'
     runs-on: ubuntu-latest
 
-    # Define o diretório de trabalho para todos os comandos
     defaults:
       run:
         working-directory: ./infra/terraform
 
     steps:
-    # Passo 1: Baixa o código do seu repositório para a máquina do robô
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    # Passo 2: Configura as credenciais da AWS usando os Secrets que você criou
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -39,20 +34,16 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1 # IMPORTANTE: Mude para a sua região
 
-    # Passo 3: Instala o Terraform na máquina do robô
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
 
-    # Passo 4: Roda 'terraform init' para preparar o ambiente
     - name: Terraform Init
       run: terraform init
 
-    # Passo 5: Roda 'terraform apply' SE a ação escolhida for 'apply'
     - name: Terraform Apply
       if: github.event.inputs.action == 'apply'
       run: terraform apply -auto-approve
 
-    # Passo 6: Roda 'terraform destroy' SE a ação escolhida for 'destroy'
     - name: Terraform Destroy
       if: github.event.inputs.action == 'destroy'
       run: terraform destroy -auto-approve
