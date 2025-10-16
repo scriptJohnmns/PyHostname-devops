@@ -1,0 +1,9 @@
+name: '2. Deploy da Aplicação'
+
+on:  
+  push:
+    branches: [ main ]
+    paths:
+      - 'app/**'
+  
+  workflow_dispatch:
