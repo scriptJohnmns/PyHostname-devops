@@ -37,3 +37,71 @@ jobs:
           IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)        
           docker build -t $ECR_REPOSITORY_URL:$IMAGE_TAG -t $ECR_REPOSITORY_URL:latest ./app
           docker push $ECR_REPOSITORY_URL --all-tags
+
+name: '2. Deploy da Aplicação'
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'app/**'
+  workflow_dispatch:
+
+jobs:
+  # --- JOB 1: CONSTRUIR E ENVIAR A IMAGEM (O que você já tem) ---
+  build-and-push:
+    name: Construir e Enviar para ECR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Credenciais da AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Mude para a sua região
+
+      - name: Login no Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Construir e Enviar a imagem para o ECR
+        env:
+          ECR_REPOSITORY_URL: ${{ secrets.ECR_REPOSITORY_URL }}
+        run: |
+          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          docker build -t $ECR_REPOSITORY_URL:$IMAGE_TAG -t $ECR_REPOSITORY_URL:latest ./app
+          docker push $ECR_REPOSITORY_URL --all-tags
+
+  # --- JOB 2: FAZER O DEPLOY COM ANSIBLE (A parte nova) ---
+  deploy-with-ansible:
+    name: Implantar no Servidor com Ansible
+    runs-on: ubuntu-latest
+    # A MÁGICA: Este job SÓ COMEÇA DEPOIS que o job 'build-and-push' terminar com sucesso
+    needs: build-and-push
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Ansible
+        run: pip install ansible
+
+      - name: Preparar Chave SSH
+        run: |
+          # Pega a chave privada do cofre do GitHub e a salva em um arquivo temporário
+          # para o Ansible poder usar.
+          echo "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+      - name: Executar Playbook de Deploy
+        run: |
+          # Desabilita a verificação de chave do host para a primeira conexão
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          
+          # Executa o playbook, passando o IP (dos Secrets) e a chave que criamos.
+          ansible-playbook -i "${{ secrets.EC2_PUBLIC_IP }}," \
+                           --user ec2-user \
+                           --private-key private_key.pem \
+                           infra/ansible/deploy-app.yml
