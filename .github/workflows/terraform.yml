@@ -50,17 +50,23 @@ jobs:
 
     - name: 7. Obter Outputs do Terraform
       if: github.event.inputs.action == 'apply'
-      id: get_outputs # Damos um "apelido" a este passo
-      run: |
-        TF_OUTPUTS=$(terraform output -json)        
-        echo "tf_outputs<<EOF" >> $GITHUB_OUTPUT
-        echo "$TF_OUTPUTS" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+      id: get_outputs 
+      run: |        
+        echo "public_ip=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
+        echo "ecr_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
 
-    - name: 8. Atualizar Segredos do GitHub
-      if: github.event.inputs.action == 'apply'      
-      uses: actions-ecosystem/action-create-secret@v1
-      with:        
-        github_token: ${{ secrets.GH_PAT }}        
-        EC2_PUBLIC_IP: ${{ fromJSON(steps.get_outputs.outputs.tf_outputs).public_ip.value }}        
-        ECR_REPOSITORY_URL: ${{ fromJSON(steps.get_outputs.outputs.tf_outputs).ecr_repository_url.value }}
+    - name: 8a. Atualizar Secret EC2_PUBLIC_IP
+      if: github.event.inputs.action == 'apply'
+      uses: hmanzur/actions-set-secret@v2
+      with:
+        token: ${{ secrets.GH_PAT }}
+        secret_name: 'EC2_PUBLIC_IP'
+        secret_value: ${{ steps.get_outputs.outputs.public_ip }}
+
+    - name: 8b. Atualizar Secret ECR_REPOSITORY_URL
+      if: github.event.inputs.action == 'apply'
+      uses: hmanzur/actions-set-secret@v2
+      with:
+        token: ${{ secrets.GH_PAT }}
+        secret_name: 'ECR_REPOSITORY_URL'
+        secret_value: ${{ steps.get_outputs.outputs.ecr_url }}
