@@ -3,10 +3,11 @@
 name: 'Terraform Infrastructure Pipeline'
 
 on:
+  # O gatilho manual continua o mesmo
   workflow_dispatch:
     inputs:
       action:
-        description: 'Apply or Destroy'
+        description: 'Apply (criar) ou Destroy (destruir)'
         required: true
         default: 'apply'
         type: choice
@@ -18,55 +19,32 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
-
+    
     defaults:
       run:
         working-directory: ./infra/terraform
 
     steps:
-    - name: 1. Checkout Repository
-      uses: actions/checkout@v4
+      - name: 1. Checkout do Repositório
+        uses: actions/checkout@v4
 
-    - name: 2. Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1 
+      - name: 2. Configurar Credenciais da AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Mude para a sua região
 
-    - name: 3. Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+      - name: 3. Setup do Terraform
+        uses: hashicorp/setup-terraform@v3
 
-    - name: 4. Terraform Init
-      run: terraform init
+      - name: 4. Terraform Init
+        run: terraform init
 
-    - name: 5. Terraform Apply
-      if: github.event.inputs.action == 'apply'
-      run: terraform apply -auto-approve
+      - name: 5. Terraform Apply
+        if: github.event.inputs.action == 'apply'
+        run: terraform apply -auto-approve
 
-    - name: 6. Terraform Destroy
-      if: github.event.inputs.action == 'destroy'
-      run: terraform destroy -auto-approve
-
-    - name: 7. Obter Outputs do Terraform
-      if: github.event.inputs.action == 'apply'
-      id: get_outputs 
-      run: |        
-        echo "public_ip=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
-        echo "ecr_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
-
-    - name: 8a. Atualizar Secret EC2_PUBLIC_IP
-      if: github.event.inputs.action == 'apply'
-      uses: hmanzur/actions-set-secret@v2
-      with:
-        token: ${{ secrets.GH_PAT }}
-        secret_name: 'EC2_PUBLIC_IP'
-        secret_value: ${{ steps.get_outputs.outputs.public_ip }}
-
-    - name: 8b. Atualizar Secret ECR_REPOSITORY_URL
-      if: github.event.inputs.action == 'apply'
-      uses: hmanzur/actions-set-secret@v2
-      with:
-        token: ${{ secrets.GH_PAT }}
-        secret_name: 'ECR_REPOSITORY_URL'
-        secret_value: ${{ steps.get_outputs.outputs.ecr_url }}
+      - name: 6. Terraform Destroy
+        if: github.event.inputs.action == 'destroy'
+        run: terraform destroy -auto-approve
