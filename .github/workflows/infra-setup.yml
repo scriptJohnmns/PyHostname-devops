@@ -1,9 +1,6 @@
-# .github/workflows/infra-setup.yml
-
 name: '1. Provisionar e Preparar a Infraestrutura'
 
-on:
-  # Gatilho manual para podermos rodar esta pipeline
+on:  
   workflow_dispatch:
     inputs:
       action:
@@ -16,8 +13,7 @@ on:
         - destroy
 
 
-jobs:
-  # --- JOB A: EXECUTAR O TERRAFORM ---
+jobs:  
   terraform:
     name: 'Terraform Apply'
     runs-on: ubuntu-latest
@@ -37,12 +33,12 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1 # Mude para a sua região
+          aws-region: us-east-1 
 
       - name: Setup do Terraform e Init
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_wrapper: false # Necessário para o init funcionar corretamente no diretório
+          terraform_wrapper: false 
       - run: terraform init
 
       - name: Terraform Apply
@@ -73,8 +69,7 @@ jobs:
         run: pip install ansible
 
       - name: Preparar Chave SSH
-        run: |
-          # Pega a chave privada do cofre do GitHub e a salva em um arquivo temporário
+        run: |          
           echo "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
 

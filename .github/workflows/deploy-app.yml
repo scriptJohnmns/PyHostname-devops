@@ -7,8 +7,7 @@ on:
       - 'app/**'
   workflow_dispatch:
 
-jobs:
-  # --- JOB 1: CONSTRUIR E ENVIAR A IMAGEM (O que você já tem) ---
+jobs:  
   build-and-push:
     name: Construir e Enviar para ECR
     runs-on: ubuntu-latest
@@ -21,7 +20,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1 # Mude para a sua região
+          aws-region: us-east-1 
 
       - name: Login no Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
@@ -34,11 +33,11 @@ jobs:
           docker build -t $ECR_REPOSITORY_URL:$IMAGE_TAG -t $ECR_REPOSITORY_URL:latest ./app
           docker push $ECR_REPOSITORY_URL --all-tags
 
-  # --- JOB 2: FAZER O DEPLOY COM ANSIBLE (A parte nova) ---
+  
   deploy-with-ansible:
     name: Implantar no Servidor com Ansible
     runs-on: ubuntu-latest
-    # A MÁGICA: Este job SÓ COMEÇA DEPOIS que o job 'build-and-push' terminar com sucesso
+    
     needs: build-and-push
 
     steps:
@@ -49,18 +48,13 @@ jobs:
         run: pip install ansible
 
       - name: Preparar Chave SSH
-        run: |
-          # Pega a chave privada do cofre do GitHub e a salva em um arquivo temporário
-          # para o Ansible poder usar.
+        run: |         
           echo "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
 
       - name: Executar Playbook de Deploy
-        run: |
-          # Desabilita a verificação de chave do host para a primeira conexão
-          export ANSIBLE_HOST_KEY_CHECKING=False
-          
-          # Executa o playbook, passando o IP (dos Secrets) e a chave que criamos.
+        run: |          
+          export ANSIBLE_HOST_KEY_CHECKING=False          
           ansible-playbook -i "${{ secrets.EC2_PUBLIC_IP }}," \
                            --user ec2-user \
                            --private-key private_key.pem \
