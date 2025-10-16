@@ -232,5 +232,5 @@ terraform.rc
 
 .mongoKeys
 
-infra/ssh/pyhostname-key
+infra/ssh/pyhostnamekey-tf
 
