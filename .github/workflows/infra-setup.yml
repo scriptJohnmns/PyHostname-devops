@@ -1,0 +1,73 @@
+# .github/workflows/infra-setup.yml
+
+name: '1. Provisionar e Preparar a Infraestrutura'
+
+on:
+  # Gatilho manual para podermos rodar esta pipeline
+  workflow_dispatch:
+
+jobs:
+  # --- JOB A: EXECUTAR O TERRAFORM ---
+  terraform:
+    name: 'Terraform Apply'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./infra/terraform
+    
+    outputs:
+      public_ip: ${{ steps.get_ip.outputs.public_ip }}
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Credenciais da AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Mude para a sua região
+
+      - name: Setup do Terraform e Init
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false # Necessário para o init funcionar corretamente no diretório
+      - run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+      
+      - name: Salvar IP Público como Output
+        id: get_ip # Damos um apelido a este passo
+        run: echo "public_ip=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
+
+  # --- JOB B: EXECUTAR O ANSIBLE SETUP ---
+  ansible-setup:
+    name: 'Ansible Server Setup'
+    runs-on: ubuntu-latest
+    # A MÁGICA (Parte 3): Este job SÓ COMEÇA DEPOIS que o job 'terraform' terminar com sucesso
+    needs: terraform 
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Ansible e dependências
+        run: pip install ansible boto3 botocore
+
+      - name: Preparar Chave SSH
+        run: |
+          # Pega a chave privada do cofre do GitHub e a salva em um arquivo temporário
+          echo "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+      - name: Executar Playbook de Setup do Servidor
+        run: |
+          # Executa o playbook.
+          # A MÁGICA (Parte 4): Em vez de um arquivo de inventário, passamos o IP diretamente!
+          # A sintaxe ${{ needs.terraform.outputs.public_ip }} lê a "etiqueta" do job anterior.
+          ansible-playbook -i "${{ needs.terraform.outputs.public_ip }}," \
+                           --user ec2-user \
+                           --private-key private_key.pem \
+                           infra/ansible/setup-server.yml
