@@ -231,3 +231,6 @@ terraform.rc
 .venv-ansible
 
 .mongoKeys
+
+infra/ssh/pyhostname-key
+

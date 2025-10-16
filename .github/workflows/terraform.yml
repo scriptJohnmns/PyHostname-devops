@@ -24,26 +24,43 @@ jobs:
         working-directory: ./infra/terraform
 
     steps:
-    - name: Checkout Repository
+    - name: 1. Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Configure AWS Credentials
+    - name: 2. Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1 # IMPORTANTE: Mude para a sua região
+        aws-region: us-east-1 
 
-    - name: Setup Terraform
+    - name: 3. Setup Terraform
       uses: hashicorp/setup-terraform@v3
 
-    - name: Terraform Init
+    - name: 4. Terraform Init
       run: terraform init
 
-    - name: Terraform Apply
+    - name: 5. Terraform Apply
       if: github.event.inputs.action == 'apply'
       run: terraform apply -auto-approve
 
-    - name: Terraform Destroy
+    - name: 6. Terraform Destroy
       if: github.event.inputs.action == 'destroy'
       run: terraform destroy -auto-approve
+
+    - name: 7. Obter Outputs do Terraform
+      if: github.event.inputs.action == 'apply'
+      id: get_outputs # Damos um "apelido" a este passo
+      run: |
+        TF_OUTPUTS=$(terraform output -json)        
+        echo "tf_outputs<<EOF" >> $GITHUB_OUTPUT
+        echo "$TF_OUTPUTS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: 8. Atualizar Segredos do GitHub
+      if: github.event.inputs.action == 'apply'      
+      uses: actions-ecosystem/action-create-secret@v1
+      with:        
+        github_token: ${{ secrets.GH_PAT }}        
+        EC2_PUBLIC_IP: ${{ fromJSON(steps.get_outputs.outputs.tf_outputs).public_ip.value }}        
+        ECR_REPOSITORY_URL: ${{ fromJSON(steps.get_outputs.outputs.tf_outputs).ecr_repository_url.value }}
