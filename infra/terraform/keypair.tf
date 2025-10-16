@@ -1,3 +1,14 @@
+resource "aws_key_pair" "pyhostname_key" {
+  # O nome que a chave terá lá no console da AWS
+  key_name = "pyhostname-key-permanente"
+
+  # O Terraform agora apenas lê o arquivo da chave pública que faz parte do nosso projeto.
+  # O caminho ../ssh/ aponta para a pasta que criamos na raiz da pasta 'infra'.
+  public_key = file("${path.module}/../ssh/pyhostnamekey-tf.pub")
+}
+
+
+/* CODIDO PRA GERAR CHAVE AUTOMATICO
 # 1. Gera um par de chaves (pública e privada) em memória
 resource "tls_private_key" "pyhostname_key" {
   algorithm = "RSA"
@@ -16,3 +27,4 @@ resource "local_file" "private_key_pem" {
   filename        = "pyhostnamekey.pem"
   file_permission = "0400" # Permissão restrita, só o dono pode ler/escrever
 }
+*/

@@ -8,3 +8,4 @@ output "ecr_repository_url" {
   # Use o nome local do seu recurso: ecr_pyhost
   value = aws_ecr_repository.ecr_pyhost.repository_url
 }
+
