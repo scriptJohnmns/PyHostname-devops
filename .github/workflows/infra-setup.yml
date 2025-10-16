@@ -79,7 +79,8 @@ jobs:
           chmod 600 private_key.pem
 
       - name: Executar Playbook de Setup do Servidor
-        run: |       
+        run: |
+         export ANSIBLE_HOST_KEY_CHECKING=False   
          ansible-playbook -i "${{ needs.terraform.outputs.public_ip }}," \
                            --user ec2-user \
                            --private-key private_key.pem \
