@@ -44,7 +44,7 @@ def hello():
         visitor_count = counter_obj.count
 
     except Exception as e:
-        print(f"Erro ao acessar o MongoDB: {e}")
+        print(f"Erro ao acessar o banco do MongoDB: {e}")
         visitor_count = "Erro no Banco de Dados"
 
     return f"""
