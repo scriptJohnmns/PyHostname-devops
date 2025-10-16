@@ -1,7 +1,7 @@
 # infra/ansible/setup-server.yml
 ---
 - name: Setup do Servidor (Instalação de Dependências)
-  hosts: webservers
+  hosts: all
   become: true
 
   tasks:
