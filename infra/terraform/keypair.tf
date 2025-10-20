@@ -2,8 +2,6 @@ resource "aws_key_pair" "pyhostname_key" {
   # O nome que a chave terá lá no console da AWS
   key_name = "pyhostname-key-permanente"
 
-  # O Terraform agora apenas lê o arquivo da chave pública que faz parte do nosso projeto.
-  # O caminho ../ssh/ aponta para a pasta que criamos na raiz da pasta 'infra'.
   public_key = file("${path.module}/../ssh/pyhostnamekey-tf.pub")
 }
 

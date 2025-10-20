@@ -1,4 +1,3 @@
-# infra/ansible/deploy-app.yml
 ---
 - name: Deploy da Aplicação Pyhostname
   hosts: webservers
@@ -8,8 +7,8 @@
     - amazon.aws
   
   vars:
-    aws_region: "us-east-1" # Mude para sua região
-    ecr_repo_uri: "408918962370.dkr.ecr.us-east-1.amazonaws.com/pyhostname-ecr" # Cole a URL base aqui
+    aws_region: "us-east-1"
+    ecr_repo_uri: "408918962370.dkr.ecr.us-east-1.amazonaws.com/pyhostname-ecr"
     deploy_dir: "/home/ec2-user"
 
   tasks:
