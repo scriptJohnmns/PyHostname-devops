@@ -32,10 +32,7 @@ A aplicação, **PyHostname**, é uma simples página web desenvolvida em **Pyth
 
 ## 🏛️ Arquitetura e Fluxo de Trabalho
 
-![Diagrama de Arquitetura](./diagram.png)
-*(Sugestão: Crie um diagrama simples em uma ferramenta como o `diagrams.net` e salve-o como `diagram.png` na raiz do seu projeto)*
-
-O projeto é orquestrado por duas pipelines independentes, permitindo que a infraestrutura e a aplicação evoluam em ritmos diferentes.
+O projeto é dividido por duas pipelines independentes, permitindo que a infraestrutura e a aplicação evoluam em ritmos diferentes.
 
 **Pipeline 1: `infra-setup.yml` (Provisionar e Preparar a Infraestrutura)**
 * **Gatilho:** Manual (`workflow_dispatch`), acionado por um Engenheiro DevOps.
